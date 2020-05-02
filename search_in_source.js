@@ -1,9 +1,6 @@
 const axios = require('axios').default;
 const cheerio = require('cheerio');
-const sources = [
-    "http://worldsubtitle.info/?s=",
-    "https://esubtitle.com/?s="
-];
+const sources = require('./sources');
 
 module.exports = async function search_in_source(name, type, source_index = 0) {
     const spitted_name = name.split(" ");
@@ -25,21 +22,24 @@ module.exports = async function search_in_source(name, type, source_index = 0) {
                 let spitted_innerText = innerText.map((text)=>text.replace(/\s/g, ""));
 
                 if (checkTitle(spitted_name, year, type, spitted_innerText)) {
-                    downloadPage = webPageLink;
-                    break;
+                    let isUrl = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/.test(webPageLink);
+                    if (isUrl) {
+                        downloadPage = webPageLink;
+                        break;
+                    }
                 }
             }
         }
 
         if (downloadPage === null) {
-            if (source_index < sources.length) {
+            if (source_index < sources.length - 1) {
                 return await search_in_source(name, type,source_index + 1);
             } else return null;
         } else return downloadPage;
 
     } catch (e) {
-        console.log('error in ' + name);
-        if (source_index < sources.length) {
+        console.log('error while search_in_source in ' + name);
+        if (source_index < sources.length - 1) {
             return await search_in_source(name, type,source_index + 1);
         } else return null;
     }

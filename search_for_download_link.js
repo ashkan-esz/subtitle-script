@@ -3,19 +3,20 @@ const cheerio = require('cheerio');
 const search_in_source = require('./search_in_source');
 const download = require('./download');
 
-module.exports = async function search_for_download_link(full_name,name, type) {
+module.exports = async function search_for_download_link(full_name, name, type) {
 
     try {
-        const page_link = await search_in_source(name,type);
-        if (page_link===null) return null;
+        if (type === 'serial') name = full_name[0].name.toLowerCase();
+        const page_link = await search_in_source(name, type);
+        if (page_link === null) return null;
         const response = await axios.get(page_link);
         let $ = cheerio.load(response.data);
         let links = $("a");
         if (type === 'movie')
-             search_movie(full_name,name, $, links);
-        else search_serial(full_name,name, $, links)
+            search_movie(full_name, name, $, links);
+        else search_serial(full_name, name, $, links)
     } catch (e) {
-        console.log('error in ' + name);
+        console.log('error while search_for_download_link in ' + name);
         return null;
     }
 }
@@ -27,11 +28,8 @@ function search_movie(full_name, name, $, links) {
         if (downloadLink !== undefined && downloadLink !== null) {
             let temp = downloadLink;
             downloadLink = downloadLink.toLowerCase();
-            if ((downloadLink.includes(name) ||
-                downloadLink.split('.').join(' ').split('-').join(' ').includes(name)) &&
-                (downloadLink.includes('.rar') || downloadLink.includes('.zip') ||
-                    downloadLink.includes('.txt') || downloadLink.includes('.srt'))) {
-
+            let spitted_downloadLink = downloadLink.replace(/[.\-]/g,' ');
+            if (spitted_downloadLink.includes(name) && check_download_format(downloadLink)) {
                 result = temp;
                 break;
             }
@@ -42,43 +40,56 @@ function search_movie(full_name, name, $, links) {
         download(full_name, result);
 }
 
-function search_serial(name,$,links) {
-    let foundLink = false;
-    let episode = 1;
-    for (let i = 0, l = links.length; i < l; i++) {
+function search_serial(serial_series, name, $, links) {
+    let result = null;
+    let zip_name;
+    let season_array = [];
+    let counter =0;
+   A: for (let i = 0, l = links.length; i < l; i++) {
         let downloadLink = $(links[i]).attr("href");
         if (downloadLink !== undefined && downloadLink !== null) {
             let temp = downloadLink;
             downloadLink = downloadLink.toLowerCase();
-            if ((downloadLink.includes(name) || downloadLink.split('.').join('').includes(name)) &&
-                (downloadLink.includes('.rar') || downloadLink.includes('.zip') ||
-                    downloadLink.includes('.txt') || downloadLink.includes('.srt'))) {
-                let text = fullName + " ";
-                let flag = false;
-                if (EPISODE !== null) episode = EPISODE;
-                let algo1 = (season < 10) ? 's0' + season : 's' + season;
-                let algo2 = algo1 + ((episode < 10) ? 'e0' + episode : 'e' + episode);
-                if (downloadLink.includes(algo2)) {
-                    text += algo2;
-                    episode++;
-                    flag = true;
-                } else if (downloadLink.includes(algo1) && !downloadLink.includes(algo1 + "e")) {
-                    text += algo1;
-                    flag = true;
-                }
-                if (flag) {
-                    div.innerHTML += `<div class="padded-top-less">
-                                    <button class="btn">
-                                         <a href="${temp}" download="${temp}"> <strong>${text}</strong></a>
-                                     </button>
-                                  </div>`;
-                    foundLink = true;
-                    if (EPISODE !== null) break;
+            let spitted_downloadLink = downloadLink.replace(/[.\-]/g,' ');
+            if (spitted_downloadLink.includes(name) && check_download_format(downloadLink)) {
+                for (let j = 0, ll = serial_series.length; j < ll; j++) {
+                    let seasonNumber = serial_series[j].season;
+                    if (season_array.includes(seasonNumber)) continue;
+                    let episodeNumber = serial_series[j].episode;
+
+                    let season_episode = 's' + seasonNumber + 'e' + episodeNumber;
+                    if (downloadLink.includes(season_episode)) {
+                        result = temp;
+                        zip_name = serial_series[j].file_name + '.xxx';
+                        download(zip_name, result);
+                        counter++;
+                        if (counter === ll) break A;
+                    } else if ((downloadLink.includes('s' + seasonNumber) && !downloadLink.includes('s' + seasonNumber + 'e')) ||
+                        spitted_downloadLink.includes(get_ordinal(parseInt(seasonNumber)) + ' season')) {
+                        result = temp;
+                        zip_name = name.replace(/\s/g, '.') + '.S' + seasonNumber + '.xxx';
+                        download(zip_name, result);
+                        season_array.push(seasonNumber);
+                        counter++;
+                        if (counter === ll) break A;
+                    }
                 }
             }
         }
     }
-
-    return foundLink;
 }
 
+function get_ordinal(number) {
+    let array = ['zeroth', 'first', 'second',
+        'third', 'fourth', 'fifth', 'sixth',
+        'seventh', 'eighth', 'ninth', 'tenth',
+        'eleventh', 'twelfth', 'thirteenth',
+        'fourteenth', 'fifteenth', 'sixteenth',
+        'seventeenth', 'eighteenth', 'nineteenth'];
+    return array[number];
+}
+
+function check_download_format(downloadLink) {
+    return (downloadLink.includes('.rar') || downloadLink.includes('.zip') ||
+        downloadLink.includes('.txt') || downloadLink.includes('.srt'));
+}

@@ -11,7 +11,7 @@ module.exports = async function download(full_name, url) {
         spitted_fullName[spitted_fullName.length - 1] = subtitle_format;
         let subtitle_file_name = spitted_fullName.join('.');
 
-        const path = Path.resolve(__dirname, 'downloaded', subtitle_file_name);
+        const path = Path.resolve(__dirname, subtitle_file_name);
         const writer = fs.createWriteStream(path)
 
         const response = await axios({

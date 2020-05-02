@@ -6,7 +6,8 @@
   "bin": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-exe": "pkg package.json --target win"
+    "build-win": "pkg package.json --target win",
+    "build-linux": "pkg package.json --target linux"
   },
   "keywords": [],
   "author": "",
