@@ -17,6 +17,7 @@ module.exports = async function search_for_download_link(full_name, name, type) 
         else search_serial(full_name, name, $, links)
     } catch (e) {
         console.log('error while search_for_download_link in ' + name);
+        console.log(e);
         return null;
     }
 }

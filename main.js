@@ -29,7 +29,11 @@ function split_video_serial(dirs) {
     for (const index in dirs) {
         let name = dirs[index];
         try {
-            if (!name.includes('.js') && !name.includes('.exe'))
+            let temp = name.split('.');
+            let file_format = temp[temp.length - 1];
+            if (file_format === 'mkv' || file_format === 'avi' ||
+                file_format === 'flv' || file_format === 'wmv' ||
+                file_format === 'mov' || file_format === 'mp4')
                 if (fs.lstatSync(`./${name}`).isFile()) {
                     if (/(s\d\de\d\d)/g.test(name.toLowerCase())) serial.push(name);
                     else movie.push(name);
@@ -82,11 +86,12 @@ function filter_serials(serials_objs, dirs) {
         let case1 = serials_objs[i].file_name.split('.');
         let file_format = case1[case1.length - 1];
         case1 = case1.join('.').replace('.'+file_format,'');
-        let case2 = serials_objs[i].name.replace(/\s/g, '.') + '.S' + serials_objs[i].season;
+        let case2 = serials_objs[i].name.replace(/\s/g, '.').toLowerCase() + '.S' + serials_objs[i].season;
         if (!dirs.includes(case1 + '.zip') && !dirs.includes(case1 + '.srt') &&
             !dirs.includes(case2 + '.zip') && !dirs.includes(case2 + '.srt'))
             result.push(serials_objs[i]);
     }
+    console.log(result)
     return result;
 }
 
@@ -99,5 +104,6 @@ function filter_movies(movies, dirs) {
         if (!dirs.includes(case1 + '.zip') && !dirs.includes(case1 + '.srt'))
             result.push(movies[i]);
     }
+    console.log(result);
     return result;
 }

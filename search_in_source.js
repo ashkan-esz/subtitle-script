@@ -39,6 +39,7 @@ module.exports = async function search_in_source(name, type, source_index = 0) {
 
     } catch (e) {
         console.log('error while search_in_source in ' + name);
+        console.log(e);
         if (source_index < sources.length - 1) {
             return await search_in_source(name, type,source_index + 1);
         } else return null;

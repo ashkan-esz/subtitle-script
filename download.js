@@ -1,5 +1,4 @@
 const fs = require('fs');
-const Path = require('path');
 const axios = require('axios');
 
 module.exports = async function download(full_name, url) {
@@ -11,8 +10,7 @@ module.exports = async function download(full_name, url) {
         spitted_fullName[spitted_fullName.length - 1] = subtitle_format;
         let subtitle_file_name = spitted_fullName.join('.');
 
-        const path = Path.resolve(__dirname, subtitle_file_name);
-        const writer = fs.createWriteStream(path)
+        const writer = fs.createWriteStream(subtitle_file_name);
 
         const response = await axios({
             url,
