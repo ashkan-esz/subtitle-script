@@ -19,7 +19,7 @@ module.exports = async function search_in_source(name, type, source_index = 0) {
             if (webPageLink !== undefined && webPageLink !== null &&
                 innerText !== null && innerText !== undefined && innerText!=="") {
                 innerText = innerText.toLowerCase().split(" ");
-                let spitted_innerText = innerText.map((text)=>text.replace(/\s/g, ""));
+                let spitted_innerText = innerText.map((text)=>text.replace(/\s|:|’/g, ""));
 
                 if (checkTitle(spitted_name, year, type, spitted_innerText)) {
                     let isUrl = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/.test(webPageLink);
@@ -47,6 +47,7 @@ module.exports = async function search_in_source(name, type, source_index = 0) {
 }
 
 function checkTitle(spitted_name, year, type, spitted_innerText) {
+    // console.log(spitted_innerText)
     let flag = true;
     if (type === 'movie') {
         for (let i = 0, l = spitted_name.length; i < l; i++) {
