@@ -2,10 +2,10 @@ const axios = require('axios').default;
 const cheerio = require('cheerio');
 const sources = require('./sources');
 
-module.exports = async function search_in_source(name, type, source_index = 0) {
-    const spitted_name = name.split(" ");
-    const searching_item = spitted_name.join('+');
+module.exports = async function search_in_source(spitted_name, type, source_index = 0) {
     const year = spitted_name[spitted_name.length - 1];
+    let searching_item = spitted_name.join('+');
+    searching_item = searching_item.replace('+'+year,'');
     let downloadPage = null;
     try {
         const response = await axios.get(`${sources[source_index]}${searching_item}`)
@@ -33,7 +33,7 @@ module.exports = async function search_in_source(name, type, source_index = 0) {
 
         if (downloadPage === null) {
             if (source_index < sources.length - 1) {
-                return await search_in_source(name, type,source_index + 1);
+                return await search_in_source(spitted_name, type,source_index + 1);
             } else return null;
         } else return downloadPage;
 
@@ -41,28 +41,26 @@ module.exports = async function search_in_source(name, type, source_index = 0) {
         console.log('error while search_in_source in ' + name);
         console.log(e);
         if (source_index < sources.length - 1) {
-            return await search_in_source(name, type,source_index + 1);
+            return await search_in_source(spitted_name, type,source_index + 1);
         } else return null;
     }
 }
 
 function checkTitle(spitted_name, year, type, spitted_innerText) {
-    // console.log(spitted_innerText)
-    let flag = true;
     if (type === 'movie') {
         for (let i = 0, l = spitted_name.length; i < l; i++) {
-            if (!spitted_innerText.includes(spitted_name[i]) && spitted_name[i] !== year) {
-                flag = false;
-                break;
+            if ((!spitted_innerText.includes(spitted_name[i]) &&
+                !spitted_innerText.includes(spitted_name[i] + 's'))
+                && spitted_name[i] !== year) {
+                return false;
             }
         }
     } else {
         for (let i = 0, l = spitted_name.length; i < l; i++) {
             if (!spitted_innerText.includes(spitted_name[i])) {
-                flag = false;
-                break;
+                return false;
             }
         }
     }
-    return flag;
+    return true;
 }
