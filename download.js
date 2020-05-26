@@ -5,10 +5,8 @@ module.exports = async function download(full_name, url) {
 
     try {
         let spitted_url = url.split('.');
-        let subtitle_format = spitted_url[spitted_url.length - 1];
-        let spitted_fullName = full_name.split('.');
-        spitted_fullName[spitted_fullName.length - 1] = subtitle_format;
-        let subtitle_file_name = spitted_fullName.join('.');
+        let subtitle_format = spitted_url.pop();
+        let subtitle_file_name = full_name + '.' + subtitle_format;
 
         const writer = fs.createWriteStream(subtitle_file_name);
 

@@ -9,13 +9,17 @@ module.exports = async function search_for_download_link(full_name, name, type) 
         if (type === 'serial') name = full_name[0].name.toLowerCase();
         const spitted_name = name.split(" ");
         const year = spitted_name[spitted_name.length - 1];
+        if (!isNaN(year)) {
+            spitted_name.pop();
+            name = spitted_name.join(' ');
+        }
         const page_link = await search_in_source(spitted_name, type);
         if (page_link === null) return null;
         const response = await axios.get(page_link);
         let $ = cheerio.load(response.data);
         let links = $("a");
         if (type === 'movie')
-            search_movie(full_name, spitted_name, year, $, links);
+            search_movie(full_name, spitted_name, $, links);
         else search_serial(full_name, name, $, links)
     } catch (e) {
         console.log('error while search_for_download_link in ' + name);
@@ -24,13 +28,13 @@ module.exports = async function search_for_download_link(full_name, name, type) 
     }
 }
 
-function search_movie(full_name, spitted_name, year, $, links) {
+function search_movie(full_name, spitted_name, $, links) {
     for (let i = 0, l = links.length; i < l; i++) {
         let downloadLink = $(links[i]).attr("href");
         if (downloadLink !== undefined && downloadLink !== null) {
             let temp = downloadLink;
             downloadLink = downloadLink.toLowerCase();
-            if (check_name(downloadLink, spitted_name, year) && check_download_format(downloadLink)) {
+            if (check_name(downloadLink, spitted_name) && check_download_format(downloadLink)) {
                 download(full_name, temp);
                 break;
             }
@@ -58,14 +62,14 @@ function search_serial(serial_series, name, $, links) {
                     let season_episode = 's' + seasonNumber + 'e' + episodeNumber;
                     if (downloadLink.includes(season_episode)) {
                         result = temp;
-                        zip_name = serial_series[j].file_name + '.xxx';
+                        zip_name = serial_series[j].file_name ;
                         download(zip_name, result);
                         counter++;
                         if (counter === ll) break A;
                     } else if ((downloadLink.includes('s' + seasonNumber) && !downloadLink.includes('s' + seasonNumber + 'e')) ||
                         spitted_downloadLink.includes(get_ordinal(parseInt(seasonNumber)) + ' season')) {
                         result = temp;
-                        zip_name = name.replace(/\s/g, '.') + '.S' + seasonNumber + '.xxx';
+                        zip_name = name.replace(/\s/g, '.') + '.S' + seasonNumber ;
                         download(zip_name, result);
                         season_array.push(seasonNumber);
                         counter++;
@@ -77,10 +81,9 @@ function search_serial(serial_series, name, $, links) {
     }
 }
 
-function check_name(downloadLink, spitted_name, year) {
+function check_name(downloadLink, spitted_name) {
     for (let i = 0, l = spitted_name.length; i < l; i++) {
-        if ((!downloadLink.includes(spitted_name[i]) && !downloadLink.includes(spitted_name[i] + 's'))
-            && spitted_name[i] !== year) {
+        if (!downloadLink.includes(spitted_name[i]) && !downloadLink.includes(spitted_name[i] + 's')) {
             return false;
         }
     }

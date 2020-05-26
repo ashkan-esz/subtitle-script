@@ -3,9 +3,10 @@ const cheerio = require('cheerio');
 const sources = require('./sources');
 
 module.exports = async function search_in_source(spitted_name, type, source_index = 0) {
-    const year = spitted_name[spitted_name.length - 1];
-    let searching_item = spitted_name.join('+');
-    searching_item = searching_item.replace('+'+year,'');
+    let searching_item;
+    if (spitted_name.length === 1)
+        searching_item = 'the+' + spitted_name;
+    else searching_item = spitted_name.join('+');
     let downloadPage = null;
     try {
         const response = await axios.get(`${sources[source_index]}${searching_item}`)
@@ -17,16 +18,12 @@ module.exports = async function search_in_source(spitted_name, type, source_inde
             let innerText = $(links[i]).text();
 
             if (webPageLink !== undefined && webPageLink !== null &&
-                innerText !== null && innerText !== undefined && innerText!=="") {
+                innerText !== null && innerText !== undefined && innerText !== "") {
                 innerText = innerText.toLowerCase().split(" ");
-                let spitted_innerText = innerText.map((text)=>text.replace(/\s|:|’/g, ""));
-
-                if (checkTitle(spitted_name, year, type, spitted_innerText)) {
-                    let isUrl = /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)?/.test(webPageLink);
-                    if (isUrl) {
-                        downloadPage = webPageLink;
-                        break;
-                    }
+                let spitted_innerText = innerText.map((text) => text.replace(/\s|:|’/g, ""));
+                if (checkTitle(spitted_name, type, spitted_innerText)) {
+                    downloadPage = webPageLink;
+                    break;
                 }
             }
         }
@@ -46,12 +43,11 @@ module.exports = async function search_in_source(spitted_name, type, source_inde
     }
 }
 
-function checkTitle(spitted_name, year, type, spitted_innerText) {
+function checkTitle(spitted_name, type, spitted_innerText) {
     if (type === 'movie') {
         for (let i = 0, l = spitted_name.length; i < l; i++) {
-            if ((!spitted_innerText.includes(spitted_name[i]) &&
-                !spitted_innerText.includes(spitted_name[i] + 's'))
-                && spitted_name[i] !== year) {
+            if (!spitted_innerText.includes(spitted_name[i]) &&
+                !spitted_innerText.includes(spitted_name[i] + 's')) {
                 return false;
             }
         }
