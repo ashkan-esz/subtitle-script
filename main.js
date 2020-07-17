@@ -51,8 +51,7 @@ function filter_movies(movies, dirs) {
         let pattern = movies[i].split('.');
         pattern.pop();
         pattern = pattern.join('.');
-
-        if (!dirs.includes(pattern + '.zip') && !dirs.includes(pattern + '.srt'))
+        if (!check_subtitle_exist(dirs,pattern))
             result.push(movies[i]);
     }
     console.log(result);
@@ -125,6 +124,16 @@ function check_video_format(inputFormat) {
 
     for (let i = 0, l = formats.length; i < l; i++) {
         if (inputFormat === formats[i])
+            return true;
+    }
+    return false
+}
+
+function check_subtitle_exist(dirs,pattern) {
+    let formats = ['.zip', '.rar', '.srt', '.txt']
+
+    for (let i = 0, l = formats.length; i < l; i++) {
+        if (dirs.includes(pattern + formats[i]))
             return true;
     }
     return false
